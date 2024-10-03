@@ -99,7 +99,13 @@ void lendBook(User* user, Book* book) {
         return;
     }
 
-    // Create a new node for borrowed book
+    // Check if the book is already borrowed by this user
+    if (isBookBorrowed(user->borrowedBooks, book->id)) {
+        printf("This book has already been borrowed!\n");
+        return;
+    }
+
+    // Create a new node for the borrowed book
     BookNode* newNode = (BookNode*)malloc(sizeof(BookNode));
     newNode->book = book;
     newNode->next = user->borrowedBooks;
@@ -119,6 +125,32 @@ Book* searchBook(Book* root, int bookId) {
     return searchBook(root->right, bookId);
 }
 
+// Function to return a book
+void returnBook(User* user, int bookId) {
+    BookNode* current = user->borrowedBooks;
+    BookNode* prev = NULL;
+
+    while (current != NULL && current->book->id != bookId) {
+        prev = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        printf("Book not found in borrowed list!\n");
+        return;
+    }
+
+    // If the book is found, remove it from the linked list
+    if (prev == NULL) {
+        user->borrowedBooks = current->next;
+    } else {
+        prev->next = current->next;
+    }
+
+    free(current); // Free the memory of the returned book node
+    printf("Book returned successfully!\n");
+}
+
 // Function to print the menu and handle user interaction
 void printMenu(Book* bookRoot, User* user) {
     int choice;
@@ -127,7 +159,8 @@ void printMenu(Book* bookRoot, User* user) {
         printf("1. View Available Books\n");
         printf("2. Borrow a Book\n");
         printf("3. View Borrowed Books\n");
-        printf("4. Exit\n");
+        printf("4. Return a Book\n"); // New menu option to return a book
+        printf("5. Exit\n");
         printf("Choose an option: ");
         scanf("%d", &choice);
 
@@ -148,13 +181,20 @@ void printMenu(Book* bookRoot, User* user) {
                 printf("\nBorrowed Books:\n");
                 printBorrowedBooks(user);
                 break;
-            case 4:
+            case 4: { // New case for returning a book
+                int bookId;
+                printf("Enter Book ID to return: ");
+                scanf("%d", &bookId);
+                returnBook(user, bookId);
+                break;
+            }
+            case 5:
                 printf("Exiting...\n");
                 break;
             default:
                 printf("Invalid option! Please try again.\n");
         }
-    } while (choice != 4);
+    } while (choice != 5);
 }
 
 // Function to free memory of the binary tree
